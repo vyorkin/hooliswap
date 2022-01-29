@@ -44,26 +44,6 @@ describe("Exchange", () => {
     });
   });
 
-  describe("getPrice", async () => {
-    it("returns correct prices", async () => {
-      await token.approve(exchange.address, toUnit(2000));
-      await exchange.addLiquidity(toUnit(2000), { value: toWei(1000) });
-
-      const etherReserve = await getBalance(exchange.address);
-      const tokenReserve = await exchange.getReserve();
-
-      // getPrice: (in * 1000) / out
-
-      // 1000000 / 2000 = 500
-      const ethPerTkn = await exchange.getPrice(etherReserve, tokenReserve);
-      // 2000000 / 1000 = 2000
-      const tknPerEth = await exchange.getPrice(tokenReserve, etherReserve);
-
-      expect(ethPerTkn.toString()).to.eq("500");
-      expect(tknPerEth.toString()).to.eq("2000");
-    });
-  });
-
   describe("getTknAmount", async () => {
     it("returns correct TKN amount", async () => {
       await token.approve(exchange.address, toUnit(200));

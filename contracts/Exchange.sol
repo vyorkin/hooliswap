@@ -50,13 +50,4 @@ contract Exchange {
         uint256 tknReserve = getReserve();
         return getAmount(inputAmount, tknReserve, address(this).balance);
     }
-
-    function getPrice(uint256 inputReserve, uint256 outputReserve)
-        public
-        pure
-        returns (uint256)
-    {
-        require(inputReserve > 0 && outputReserve > 0, "invalid reserves");
-        return (inputReserve * 1000) / outputReserve;
-    }
 }
