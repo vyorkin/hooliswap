@@ -7,15 +7,15 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract Exchange {
     address public tokenAddress;
 
-    constructor(address _token) {
-        require(_token != address(0), "invalid token address");
+    constructor(address token) {
+        require(token != address(0), "invalid token address");
 
-        tokenAddress = _token;
+        tokenAddress = token;
     }
 
-    function addLiquidity(uint256 _tokenAmount) public payable {
+    function addLiquidity(uint256 tokenAmount) public payable {
         IERC20 token = IERC20(tokenAddress);
-        token.transferFrom(msg.sender, address(this), _tokenAmount);
+        token.transferFrom(msg.sender, address(this), tokenAmount);
     }
 
     function getReserve() public view returns (uint256) {
@@ -49,5 +49,33 @@ contract Exchange {
         require(inputAmount > 0, "inputAmount is too small");
         uint256 tknReserve = getReserve();
         return getAmount(inputAmount, tknReserve, address(this).balance);
+    }
+
+    function swapEthToTkn(uint256 minOutputAmount) public payable {
+        uint256 tknReserve = getReserve();
+        // We need to subtract msg.value from contract’s balance because
+        // by the time the function is called the ethers sent have
+        // already been added to its balance
+        uint256 ethReserve = address(this).balance - msg.value;
+        uint256 outputAmount = getAmount(msg.value, ethReserve, tknReserve);
+
+        require(outputAmount >= minOutputAmount, "insufficient output amount");
+
+        IERC20(tokenAddress).transfer(msg.sender, outputAmount);
+    }
+
+    function swapTknToEth(uint256 inputAmount, uint256 minOutputAmount) public {
+        uint256 tknReserve = getReserve();
+        uint256 ethReserve = address(this).balance;
+        uint256 outputAmount = getAmount(inputAmount, tknReserve, ethReserve);
+
+        require(outputAmount >= minOutputAmount, "insufficient output amount");
+
+        IERC20(tokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            inputAmount
+        );
+        payable(msg.sender).transfer(outputAmount);
     }
 }
