@@ -38,7 +38,7 @@ describe("Exchange", () => {
       // Deposit 200 TKN and 100 ETH
       await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
       // Exchange received 200 TKN
-      expect(await exchange.getReserve()).to.equal(toUnit(200));
+      expect(await exchange.getTknReserve()).to.equal(toUnit(200));
       // Exchange received 100 ETH
       expect(await getBalance(exchange.address)).to.equal(toWei(100));
     });
