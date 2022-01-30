@@ -18,7 +18,8 @@ contract Exchange is ERC20 {
     }
 
     function addLiquidity(uint256 tknAmount) public payable returns (uint256) {
-        // LP_minted = LP_total_supply * (ETH_deposited / ETH_reserve)
+        // The amount of LP tokens is proportional to
+        // the share of added liquidity (in ETH)
 
         if (getTknReserve() == 0) {
             // If this is a new exchange (no liquidity) allow
@@ -42,11 +43,32 @@ contract Exchange is ERC20 {
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmountActual);
 
+            // lp_minted = lp_total_supply * (eth_deposited / eth_reserve)
             uint256 liquidity = (totalSupply() * msg.value) / ethReserve;
+
             _mint(msg.sender, liquidity);
 
             return liquidity;
         }
+    }
+
+    function removeLiquidity(uint256 lpAmount)
+        public
+        returns (uint256, uint256)
+    {
+        require(lpAmount > 0, "invalid amount");
+
+        // LP tokens exchanged back for liquidity + accumulates fees
+
+        uint256 ethAmount = (address(this).balance * lpAmount) / totalSupply();
+        uint256 tknAmount = (getTknReserve() * lpAmount) / totalSupply();
+
+        _burn(msg.sender, lpAmount);
+
+        payable(msg.sender).transfer(ethAmount);
+        IERC20(tokenAddress).transfer(msg.sender, tknAmount);
+
+        return (ethAmount, tknAmount);
     }
 
     function getTknReserve() public view returns (uint256) {
