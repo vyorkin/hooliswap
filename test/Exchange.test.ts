@@ -50,19 +50,26 @@ describe("Exchange", () => {
       // 200 TKN, 100 ETH
       await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
 
-      // (1 * 200) / (100 + 1) = 1.980198019801980198
+      // (1 * 200) / (100 + 1) - fee
+      // = 1.980198019801980198 - fee = 1.960590157441330824
       let tknOut = await exchange.getTknAmount(toWei(1));
-      expect(fromUnit(tknOut.toString())).to.equal("1.980198019801980198");
+      expect(fromUnit(tknOut.toString())).to.equal("1.960590157441330824");
 
       // slippage affects prices
 
-      // (100 * 200) / (100 + 100) = 20000 / 200 = 100.0
+      // (100 * 200) / (100 + 100) - fee
+      // = 20000 / 200 - fee
+      // = 100 - fee
+      // = 99.497487437185929648
       tknOut = await exchange.getTknAmount(toWei(100));
-      expect(fromUnit(tknOut.toString())).to.equal("100.0");
+      expect(fromUnit(tknOut.toString())).to.equal("99.497487437185929648");
 
-      // (1000 * 200) / (100 + 1000) = 200000 / 1100 = 181.818181818181818181
+      // (1000 * 200) / (100 + 1000) - fee
+      // = 200000 / 1100 - fee
+      // = 181.818181818181818181 - fee
+      // = 181.651376146788990825
       tknOut = await exchange.getTknAmount(toWei(1000));
-      expect(fromUnit(tknOut.toString())).to.equal("181.818181818181818181");
+      expect(fromUnit(tknOut.toString())).to.equal("181.651376146788990825");
     });
   });
 
@@ -72,17 +79,25 @@ describe("Exchange", () => {
       // 200 TKN, 100 ETH
       await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
 
-      // (2 * 100) / (200 + 2) = 0.990099009900990099
+      // (2 * 100) / (200 + 2) - fee
+      // = 0.990099009900990099 - fee
+      // = 0.980295078720665412
       let ethOut = await exchange.getEthAmount(toUnit(2));
-      expect(fromWei(ethOut.toString())).to.equal("0.990099009900990099");
+      expect(fromWei(ethOut.toString())).to.equal("0.980295078720665412");
 
-      // (100 * 100) / (200 + 100) = 10000 / 300 = 33.333333333333333333
+      // (100 * 100) / (200 + 100) - fee
+      // = 10000 / 300 - fee
+      // = 33.333333333333333333 - fee
+      // = 33.110367892976588628
       ethOut = await exchange.getEthAmount(toUnit(100));
-      expect(fromWei(ethOut.toString())).to.equal("33.333333333333333333");
+      expect(fromWei(ethOut.toString())).to.equal("33.110367892976588628");
 
-      // (2000 * 100) / (200 + 2000) = 200000 / 2200 = 90.90909090909090909
+      // (2000 * 100) / (200 + 2000) - fee
+      // = 200000 / 2200 - fee
+      // = 90.90909090909090909 - fee
+      // = 90.825688073394495412
       ethOut = await exchange.getEthAmount(toUnit(2000));
-      expect(fromWei(ethOut.toString())).to.equal("90.90909090909090909");
+      expect(fromWei(ethOut.toString())).to.equal("90.825688073394495412");
     });
   });
 });
