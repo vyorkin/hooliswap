@@ -13,12 +13,27 @@ contract Exchange {
         tokenAddress = token;
     }
 
-    function addLiquidity(uint256 tokenAmount) public payable {
-        IERC20 token = IERC20(tokenAddress);
-        token.transferFrom(msg.sender, address(this), tokenAmount);
+    function addLiquidity(uint256 tknAmount) public payable {
+        if (getTknReserve() == 0) {
+            // If this is a new exchange (no liquidity) allow
+            // an arbitrary liquidity proportion
+            IERC20 token = IERC20(tokenAddress);
+            token.transferFrom(msg.sender, address(this), tknAmount);
+        } else {
+            // Otherwise enforce the established reserves proportion
+            uint256 ethReserve = address(this).balance - msg.value;
+            uint256 tknReserve = getTknReserve();
+            // 10 TKN_r, 2 ETH_r
+            // (5 TKN, 1 ETH): 1 ETH * 10 TKN_r / 2 ETH_r = 5 TKN (OK)
+            // (2 TKN, 4 ETH): 4 ETH * 10 TKN_r / 2 ETH_r = 20 TKN (FAIL)
+            uint256 tknAmountActual = (msg.value * tknReserve) / ethReserve;
+
+            IERC20 token = IERC20(tokenAddress);
+            token.transferFrom(msg.sender, address(this), tknAmountActual);
+        }
     }
 
-    function getReserve() public view returns (uint256) {
+    function getTknReserve() public view returns (uint256) {
         return IERC20(tokenAddress).balanceOf(address(this));
     }
 
@@ -41,18 +56,18 @@ contract Exchange {
 
     function getTknAmount(uint256 inputAmount) public view returns (uint256) {
         require(inputAmount > 0, "inputAmount is too small");
-        uint256 tknReserve = getReserve();
+        uint256 tknReserve = getTknReserve();
         return getAmount(inputAmount, address(this).balance, tknReserve);
     }
 
     function getEthAmount(uint256 inputAmount) public view returns (uint256) {
         require(inputAmount > 0, "inputAmount is too small");
-        uint256 tknReserve = getReserve();
+        uint256 tknReserve = getTknReserve();
         return getAmount(inputAmount, tknReserve, address(this).balance);
     }
 
     function swapEthToTkn(uint256 minOutputAmount) public payable {
-        uint256 tknReserve = getReserve();
+        uint256 tknReserve = getTknReserve();
         // We need to subtract msg.value from contract’s balance because
         // by the time the function is called the ethers sent have
         // already been added to its balance
@@ -65,7 +80,7 @@ contract Exchange {
     }
 
     function swapTknToEth(uint256 inputAmount, uint256 minOutputAmount) public {
-        uint256 tknReserve = getReserve();
+        uint256 tknReserve = getTknReserve();
         uint256 ethReserve = address(this).balance;
         uint256 outputAmount = getAmount(inputAmount, tknReserve, ethReserve);
 
