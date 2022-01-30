@@ -3,22 +3,33 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Exchange {
+// 1% LP fee
+uint256 constant lpFee = 1;
+
+contract Exchange is ERC20 {
     address public tokenAddress;
 
-    constructor(address token) {
+    constructor(address token) ERC20("Hooliswap-V1", "HOOLI-V1") {
         require(token != address(0), "invalid token address");
 
         tokenAddress = token;
     }
 
-    function addLiquidity(uint256 tknAmount) public payable {
+    function addLiquidity(uint256 tknAmount) public payable returns (uint256) {
+        // LP_minted = LP_total_supply * (ETH_deposited / ETH_reserve)
+
         if (getTknReserve() == 0) {
             // If this is a new exchange (no liquidity) allow
             // an arbitrary liquidity proportion
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmount);
+
+            uint256 liquidity = address(this).balance;
+            _mint(msg.sender, liquidity);
+
+            return liquidity;
         } else {
             // Otherwise enforce the established reserves proportion
             uint256 ethReserve = address(this).balance - msg.value;
@@ -30,6 +41,11 @@ contract Exchange {
 
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmountActual);
+
+            uint256 liquidity = (totalSupply() * msg.value) / ethReserve;
+            _mint(msg.sender, liquidity);
+
+            return liquidity;
         }
     }
 
@@ -51,7 +67,17 @@ contract Exchange {
         uint256 outputReserve
     ) private pure returns (uint256) {
         require(inputReserve > 0 && outputReserve > 0, "invalid reserves");
-        return (inputAmount * outputReserve) / (inputReserve + inputAmount);
+
+        // we take 1% fee
+
+        // Δx' = Δx * ((100 - fee) / 100)
+        // Δy  = (y * Δx') / (x * 100 + Δx')
+
+        uint256 inputAmountWithFee = inputAmount * (100 - lpFee);
+        uint256 numerator = inputAmountWithFee * outputReserve;
+        uint256 denominator = inputReserve * 100 + inputAmountWithFee;
+
+        return numerator / denominator;
     }
 
     function getTknAmount(uint256 inputAmount) public view returns (uint256) {
