@@ -29,19 +29,120 @@ describe("Exchange", () => {
 
   it("is deployed", async () => {
     expect(await exchange.deployed()).to.equal(exchange);
+    expect(await exchange.name()).to.equal("Hooliswap-V1");
+    expect(await exchange.symbol()).to.equal("HOOLI-V1");
+    expect(await exchange.totalSupply()).to.equal(toWei(0));
   });
 
   describe("addLiquidity", async () => {
-    it("adds liquidity", async () => {
-      // Approve spending of 200 TKN
-      await token.approve(exchange.address, toUnit(200));
-      // Deposit 200 TKN and 100 ETH
-      await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
-      // Exchange received 200 TKN
-      expect(await exchange.getTknReserve()).to.equal(toUnit(200));
-      // Exchange received 100 ETH
-      expect(await getBalance(exchange.address)).to.equal(toWei(100));
+    describe("empty reserves", async () => {
+      it("adds liquidity", async () => {
+        // Approve spending of 200 TKN
+        await token.approve(exchange.address, toUnit(200));
+        // Deposit 200 TKN and 100 ETH
+        await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
+        // Exchange received 200 TKN
+        expect(await exchange.getTknReserve()).to.equal(toUnit(200));
+        // Exchange received 100 ETH
+        expect(await getBalance(exchange.address)).to.equal(toWei(100));
+      });
+
+      it("mints LP tokens", async () => {
+        await token.approve(exchange.address, toUnit(200));
+        await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
+
+        expect(await getBalance(exchange.address)).to.equal(toWei(100));
+        expect(await exchange.totalSupply()).to.eq(toWei(100));
+      });
+
+      it("allows zero amounts", async () => {
+        await token.approve(exchange.address, 0);
+        await exchange.addLiquidity(0, { value: 0 });
+
+        expect(await getBalance(exchange.address)).to.equal(0);
+        expect(await exchange.getTknReserve()).to.equal(0);
+      });
     });
+
+    describe("existing reserves", () => {
+      beforeEach(async () => {
+        await token.approve(exchange.address, toUnit(300));
+        await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
+      });
+
+      it("preserves exchange rate", async () => {
+        // Should take only 100 of 200 TKN
+        await exchange.addLiquidity(toUnit(200), { value: toWei(50) });
+
+        expect(await getBalance(exchange.address)).to.equal(toWei(150));
+        expect(await exchange.getTknReserve()).to.eq(toWei(300));
+      });
+
+      it("mints LP tokens", async () => {
+        await exchange.addLiquidity(toUnit(200), { value: toWei(50) });
+
+        expect(await exchange.balanceOf(owner.address)).to.eq(toWei(150));
+        expect(await exchange.totalSupply()).to.eq(toWei(150));
+      });
+
+      it("fails when not enough tokens", async () => {
+        await expect(
+          exchange.addLiquidity(toUnit(50), { value: toWei(50) })
+        ).to.be.revertedWith("insufficient token amount");
+      });
+    });
+  });
+
+  describe("removeLiquidity", async () => {
+    beforeEach(async () => {
+      await token.approve(exchange.address, toWei(300));
+      await exchange.addLiquidity(toUnit(200), { value: toWei(100) });
+    });
+
+    it("removes some liquidity", async () => {
+      const ethBefore = await getBalance(owner.address);
+      const tknBefore = await token.balanceOf(owner.address);
+
+      const lpAmount = 25;
+      await exchange.removeLiquidity(toUnit(lpAmount));
+
+      expect(await exchange.getTknReserve()).to.equal(toUnit(150));
+      expect(await getBalance(exchange.address)).to.equal(toWei(75));
+
+      const ethAfter = await getBalance(owner.address);
+      const tknAfter = await token.balanceOf(owner.address);
+
+      const ethDelta = fromWei(ethAfter.sub(ethBefore));
+      expect(ethDelta).to.equal("24.999938625262222711"); // 25 - fee
+      const tknDelta = fromUnit(tknAfter.sub(tknBefore));
+      // (200 TKN, 100 ETH) => 25 LP = 50 TKN
+      expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
+    });
+
+    it("removes all liquidity", async () => {
+      const ethBefore = await getBalance(owner.address);
+      const tknBefore = await token.balanceOf(owner.address);
+
+      const lpAmount = 100;
+      await exchange.removeLiquidity(toUnit(lpAmount));
+
+      expect(await exchange.getTknReserve()).to.equal(toUnit(0));
+      expect(await getBalance(exchange.address)).to.equal(toWei(0));
+
+      const ethAfter = await getBalance(owner.address);
+      const tknAfter = await token.balanceOf(owner.address);
+
+      const ethDelta = fromWei(ethAfter.sub(ethBefore));
+      expect(ethDelta).to.equal("99.999951188648668816"); // 100 - gas fee
+      const tknDelta = fromUnit(tknAfter.sub(tknBefore));
+      expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
+    });
+
+    it("pays for provided liquidity", async () => {});
+
+    it("burns LP-tokens", async () => {});
+
+    it("doesn't allow invalid amount", async () => {});
   });
 
   describe("getTknAmount", async () => {
