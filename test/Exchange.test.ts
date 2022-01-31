@@ -113,7 +113,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("24.999938625262222711"); // 25 - fee
+      expect(ethDelta).to.equal("24.999938623462019045"); // 25 - fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       // (200 TKN, 100 ETH) => 25 LP = 50 TKN
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
@@ -133,7 +133,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("99.999951188648668816"); // 100 - gas fee
+      expect(ethDelta).to.equal("99.99995118780031478"); // 100 - gas fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
     });

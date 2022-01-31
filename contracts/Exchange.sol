@@ -10,11 +10,13 @@ uint256 constant lpFee = 1;
 
 contract Exchange is ERC20 {
     address public tokenAddress;
+    address public factoryAddress;
 
     constructor(address token) ERC20("Hooliswap-V1", "HOOLI-V1") {
         require(token != address(0), "invalid token address");
 
         tokenAddress = token;
+        factoryAddress = msg.sender;
     }
 
     function addLiquidity(uint256 tknAmount) public payable returns (uint256) {
