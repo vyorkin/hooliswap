@@ -40,6 +40,8 @@ contract Exchange is ERC20 {
             // (2 TKN, 4 ETH): 4 ETH * 10 TKN_r / 2 ETH_r = 20 TKN (FAIL)
             uint256 tknAmountActual = (msg.value * tknReserve) / ethReserve;
 
+            require(tknAmount >= tknAmountActual, "insufficient token amount");
+
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmountActual);
 
