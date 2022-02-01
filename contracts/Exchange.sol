@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -57,10 +58,14 @@ contract Exchange is ERC20 {
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmountActual);
 
+            console.log("added %d TKN", tknAmountActual);
+
             // lp_minted = lp_total_supply * (eth_deposited / eth_reserve)
             uint256 liquidity = (totalSupply() * msg.value) / ethReserve;
 
             _mint(msg.sender, liquidity);
+
+            console.log("minted %d HOOLI-V1", liquidity);
 
             return liquidity;
         }
