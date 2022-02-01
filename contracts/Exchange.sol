@@ -8,6 +8,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // 1% LP fee
 uint256 constant lpFee = 1;
 
+interface IExchange {
+    function transferEthToTkn(uint256 min, address recipient) external payable;
+
+    function swapEthToTkn(uint256) external payable;
+}
+
+interface IFactory {
+    function getExchange(address tokenAddress) external returns (address);
+}
+
 contract Exchange is ERC20 {
     address public tokenAddress;
     address public factoryAddress;
@@ -118,7 +128,9 @@ contract Exchange is ERC20 {
         return getAmount(inputAmount, tknReserve, address(this).balance);
     }
 
-    function swapEthToTkn(uint256 minOutputAmount) public payable {
+    function transferEthToTkn(uint256 outputAmountMin, address recipient)
+        private
+    {
         uint256 tknReserve = getTknReserve();
         // We need to subtract msg.value from contract’s balance because
         // by the time the function is called the ethers sent have
@@ -126,17 +138,21 @@ contract Exchange is ERC20 {
         uint256 ethReserve = address(this).balance - msg.value;
         uint256 outputAmount = getAmount(msg.value, ethReserve, tknReserve);
 
-        require(outputAmount >= minOutputAmount, "insufficient output amount");
+        require(outputAmount >= outputAmountMin, "insufficient output amount");
 
-        IERC20(tokenAddress).transfer(msg.sender, outputAmount);
+        IERC20(tokenAddress).transfer(recipient, outputAmount);
     }
 
-    function swapTknToEth(uint256 inputAmount, uint256 minOutputAmount) public {
+    function swapEthToTkn(uint256 outputAmountMin) public payable {
+        transferEthToTkn(outputAmountMin, msg.sender);
+    }
+
+    function swapTknToEth(uint256 inputAmount, uint256 outputAmountMin) public {
         uint256 tknReserve = getTknReserve();
         uint256 ethReserve = address(this).balance;
         uint256 outputAmount = getAmount(inputAmount, tknReserve, ethReserve);
 
-        require(outputAmount >= minOutputAmount, "insufficient output amount");
+        require(outputAmount >= outputAmountMin, "insufficient output amount");
 
         IERC20(tokenAddress).transferFrom(
             msg.sender,
@@ -144,5 +160,27 @@ contract Exchange is ERC20 {
             inputAmount
         );
         payable(msg.sender).transfer(outputAmount);
+    }
+
+    function swapTknToTkn(
+        uint256 inputAmount,
+        uint256 outputAmountMin,
+        address token
+    ) public {
+        address exchange = IFactory(factoryAddress).getExchange(token);
+        require(
+            exchange != address(this) && exchange != address(0),
+            "invalid exchange address"
+        );
+
+        uint256 tknReserve = getTknReserve();
+        uint256 ethReserve = address(this).balance;
+        uint256 ethOutput = getAmount(inputAmount, tknReserve, ethReserve);
+
+        IERC20(token).transferFrom(msg.sender, address(this), inputAmount);
+        IExchange(exchange).transferEthToTkn{value: ethOutput}(
+            outputAmountMin,
+            msg.sender
+        );
     }
 }
