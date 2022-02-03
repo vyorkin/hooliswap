@@ -2,9 +2,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import "@nomiclabs/hardhat-waffle";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
 import { Token, Exchange } from "../typechain";
-import { toWei, fromWei, toUnit, fromUnit } from "./utils";
+import { toWei, fromWei, toUnit, fromUnit } from "../utils";
 
 const getBalance = ethers.provider.getBalance;
 
@@ -32,6 +31,7 @@ describe("Exchange", () => {
     expect(await exchange.name()).to.equal("Hooliswap-V1");
     expect(await exchange.symbol()).to.equal("HOOLI-V1");
     expect(await exchange.totalSupply()).to.equal(toWei(0));
+    expect(await exchange.factoryAddress()).to.equal(owner.address);
   });
 
   describe("addLiquidity", async () => {
@@ -113,7 +113,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("24.999938611990494263"); // 25 - fee
+      expect(ethDelta).to.equal("24.999938611164587638"); // 25 - fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       // (200 TKN, 100 ETH) => 25 LP = 50 TKN
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
@@ -133,7 +133,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("99.999951182391730466"); // 100 - gas fee
+      expect(ethDelta).to.equal("99.999951182001693224"); // 100 - gas fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
     });
@@ -200,5 +200,66 @@ describe("Exchange", () => {
       ethOut = await exchange.getEthAmount(toUnit(2000));
       expect(fromWei(ethOut.toString())).to.equal("90.825688073394495412");
     });
+  });
+
+  describe("transferEthToTkn", async () => {
+    beforeEach(async () => {
+      await token.approve(exchange.address, toUnit(2000));
+      await exchange.addLiquidity(toUnit(2000), { value: toWei(1000) });
+    });
+
+    it("transfers at least min amount of tokens to recipent", async () => {
+      const ethBefore = await getBalance(user.address);
+
+      const amountMin = toUnit(1.97);
+      await exchange
+        .connect(user)
+        .transferEthToTkn(amountMin, user.address, { value: toWei(1) });
+
+      const ethAfter = await getBalance(user.address);
+      const ethDelta = fromWei(ethAfter.sub(ethBefore));
+
+      // The ratio is 1000 TKN / 2000 ETH = 1/2
+      // We expect to get 2 TKN, so we spent only ~1 ETH
+      expect(ethDelta).to.equal("-1.000059087009481491");
+
+      const tknBalanceUser = await token.balanceOf(user.address);
+      expect(fromUnit(tknBalanceUser)).to.equal("1.978041738678708079");
+
+      const ethBalanceExchange = await getBalance(exchange.address);
+      expect(fromWei(ethBalanceExchange)).to.equal("1001.0");
+
+      const tknBalanceExchange = await token.balanceOf(exchange.address);
+      expect(fromUnit(tknBalanceExchange)).to.equal("1998.021958261321291921");
+    });
+  });
+
+  describe("swapEthToTkn", async () => {
+    beforeEach(async () => {
+      await token.approve(exchange.address, toUnit(2000));
+      await exchange.addLiquidity(toUnit(2000), { value: toWei(1000) });
+    });
+
+    it("transfers at least min amount of tokens", async () => {});
+
+    it("affects exchange rate", async () => {});
+
+    it("fails when output amount is less than min amount", async () => {});
+
+    it("allows zero swaps", async () => {});
+  });
+
+  describe("swapTknToEth", async () => {
+    it("transfers at least min amount of tokens", async () => {});
+
+    it("affects exchange rate", async () => {});
+
+    it("fails when output amount is less than min amount", async () => {});
+
+    it("allows zero swaps", async () => {});
+  });
+
+  describe("swapTknToTkn", async () => {
+    it("swaps token for token", async () => {});
   });
 });

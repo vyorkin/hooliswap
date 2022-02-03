@@ -134,7 +134,8 @@ contract Exchange is ERC20 {
     }
 
     function transferEthToTkn(uint256 outputAmountMin, address recipient)
-        private
+        public
+        payable
     {
         uint256 tknReserve = getTknReserve();
         // We need to subtract msg.value from contract’s balance because

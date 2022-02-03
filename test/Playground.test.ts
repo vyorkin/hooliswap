@@ -14,10 +14,10 @@ describe("Playground", () => {
     [owner, user] = await ethers.getSigners();
   });
 
-  describe("Bignumbers", () => {
+  describe("BigNumber", () => {
     it("tests equality", async () => {
       const balance = await getBalance(user.address);
-      expect(balance).to.equal(initialBalance);
+      expect(balance).to.equal("9998999940912990518509");
     });
   });
 });
