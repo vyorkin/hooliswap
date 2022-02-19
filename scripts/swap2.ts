@@ -7,12 +7,12 @@ import {
 } from "../typechain";
 import { fromUnit, fromWei, toUnit, toWei } from "../utils";
 
-const { ALCHEMY_ROPSTEN_API_KEY, ACCOUNT1_PRIVATE_KEY } = process.env;
+const { ALCHEMY_RINKEBY_API_KEY, ACCOUNT1_PRIVATE_KEY } = process.env;
 const { AAA_TOKEN, AAA_EXCHANGE } = process.env;
 
 const provider = new ethers.providers.AlchemyProvider(
-  "ropsten",
-  ALCHEMY_ROPSTEN_API_KEY
+  "rinkeby",
+  ALCHEMY_RINKEBY_API_KEY
 );
 const wallet = new ethers.Wallet(ACCOUNT1_PRIVATE_KEY!, provider);
 const aaaToken: Token = Token__factory.connect(AAA_TOKEN!, wallet);
@@ -35,7 +35,7 @@ async function printState() {
     fromUnit(account1Tkn)
   );
   const tknReserve = await aaaExchange.getTknReserve();
-  const ethReserve = await ethers.provider.getBalance(aaaExchange.address);
+  const ethReserve = await provider.getBalance(aaaExchange.address);
   console.log(
     "reserve: %s ETH, %s TKN",
     fromWei(ethReserve),

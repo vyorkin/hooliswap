@@ -1,4 +1,4 @@
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@nomiclabs/hardhat-waffle";
@@ -14,8 +14,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { ETHERSCAN_API_KEY, ALCHEMY_ROPSTEN_API_URL, ACCOUNT1_PRIVATE_KEY } =
-  process.env;
+const {
+  ETHERSCAN_API_KEY,
+  ALCHEMY_RINKEBY_API_URL,
+  ALCHEMY_ROPSTEN_API_URL,
+  ACCOUNT1_PRIVATE_KEY,
+} = process.env;
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -33,6 +37,11 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {},
+    rinkeby: {
+      url: ALCHEMY_RINKEBY_API_URL,
+      accounts: [`0x${ACCOUNT1_PRIVATE_KEY}`],
+      gasMultiplier: 2,
+    },
     ropsten: {
       url: ALCHEMY_ROPSTEN_API_URL,
       accounts: [`0x${ACCOUNT1_PRIVATE_KEY}`],
