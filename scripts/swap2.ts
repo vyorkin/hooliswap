@@ -28,16 +28,16 @@ async function main() {
 async function printState() {
   const account1Wei = await wallet.getBalance();
   const account1Eth = fromWei(account1Wei);
-  const account1Tkn = await aaaToken.balanceOf(wallet.address);
+  const account1Aaa = await aaaToken.balanceOf(wallet.address);
   console.log(
-    "account1 balance: %s ETH, %s TKN",
+    "account1 balance: %s ETH, %s AAA",
     account1Eth,
-    fromUnit(account1Tkn)
+    fromUnit(account1Aaa)
   );
   const tknReserve = await aaaExchange.getTknReserve();
   const ethReserve = await provider.getBalance(aaaExchange.address);
   console.log(
-    "reserve: %s ETH, %s TKN",
+    "reserve: %s ETH, %s AAA",
     fromWei(ethReserve),
     fromUnit(tknReserve)
   );
