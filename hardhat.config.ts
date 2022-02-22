@@ -5,6 +5,8 @@ import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
 import "solidity-coverage";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
 
 import "./tasks/accounts";
 import "./tasks/balance";
@@ -46,6 +48,9 @@ const config: HardhatUserConfig = {
       url: ALCHEMY_ROPSTEN_API_URL,
       accounts: [`0x${ACCOUNT1_PRIVATE_KEY}`],
     },
+  },
+  namedAccounts: {
+    deployer: 0,
   },
   mocha: {
     timeout: 200000,
