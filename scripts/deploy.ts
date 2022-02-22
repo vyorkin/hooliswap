@@ -23,7 +23,7 @@ async function main() {
 
   const Exchange = await ethers.getContractFactory("Exchange");
   const aaaExchange = await Exchange.deploy(aaa.address);
-  const bbbExchange = await Exchange.deploy(aaa.address);
+  const bbbExchange = await Exchange.deploy(bbb.address);
   await aaaExchange.deployed();
   await bbbExchange.deployed();
 
