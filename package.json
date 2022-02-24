@@ -14,6 +14,7 @@
     "balance": "npx hardhat balance --account",
     "block-number": "npx hardhat block-number",
     "deploy": "npx hardhat deploy --network rinkeby",
+    "verify": "npx hardhat --network rinkeby etherscan-verify",
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
     "accounts": "npx hardhat accounts",

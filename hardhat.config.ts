@@ -43,6 +43,12 @@ const config: HardhatUserConfig = {
       url: ALCHEMY_RINKEBY_API_URL,
       accounts: [`0x${ACCOUNT1_PRIVATE_KEY}`],
       gasMultiplier: 2,
+      verify: {
+        etherscan: {
+          apiKey: ETHERSCAN_API_KEY!,
+          apiUrl: "https://api-rinkeby.etherscan.io/",
+        },
+      },
     },
     ropsten: {
       url: ALCHEMY_ROPSTEN_API_URL,
@@ -58,6 +64,11 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY!,
+  },
+  verify: {
+    etherscan: {
+      apiKey: ETHERSCAN_API_KEY!,
+    },
   },
   typechain: {
     outDir: "typechain",
