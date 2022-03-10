@@ -20,6 +20,7 @@ const {
   ETHERSCAN_API_KEY,
   ALCHEMY_RINKEBY_API_URL,
   ALCHEMY_ROPSTEN_API_URL,
+  ALCHEMY_FORKING_API_URL,
   ACCOUNT1_PRIVATE_KEY,
 } = process.env;
 
@@ -38,7 +39,11 @@ const config: HardhatUserConfig = {
     ],
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking: {
+        url: ALCHEMY_FORKING_API_URL!,
+      },
+    },
     rinkeby: {
       url: ALCHEMY_RINKEBY_API_URL,
       accounts: [`0x${ACCOUNT1_PRIVATE_KEY}`],
