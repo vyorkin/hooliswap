@@ -7,7 +7,9 @@ async function main() {
   const aaa = await Token.deploy("AAA Token", "AAA", toUnit(1000000));
   const bbb = await Token.deploy("BBB Token", "BBB", toUnit(1000000));
   const ccc = await Token.deploy("CCC Token", "CCC", toUnit(1000000));
-  await Promise.all([aaa.deployed(), bbb.deployed(), ccc.deployed()]);
+  await aaa.deployed();
+  await bbb.deployed();
+  await ccc.deployed();
 
   console.log('AAA_TOKEN = "%s"', aaa.address);
   console.log('BBB_TOKEN = "%s"', bbb.address);
@@ -21,8 +23,9 @@ async function main() {
 
   const Exchange = await ethers.getContractFactory("Exchange");
   const aaaExchange = await Exchange.deploy(aaa.address);
-  const bbbExchange = await Exchange.deploy(aaa.address);
-  await Promise.all([aaaExchange.deployed(), bbbExchange.deployed()]);
+  const bbbExchange = await Exchange.deploy(bbb.address);
+  await aaaExchange.deployed();
+  await bbbExchange.deployed();
 
   console.log('AAA_EXCHANGE = "%s"', aaaExchange.address);
   console.log('BBB_EXCHANGE = "%s"', bbbExchange.address);

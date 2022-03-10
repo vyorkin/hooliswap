@@ -1,23 +1,15 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import "@nomiclabs/hardhat-waffle";
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { toWei } from "../utils";
 
 const getBalance = ethers.provider.getBalance;
-const initialBalance = ethers.constants.WeiPerEther.mul(10000);
 
 describe("Playground", () => {
-  let owner: SignerWithAddress;
-  let user: SignerWithAddress;
-
-  beforeEach(async () => {
-    [owner, user] = await ethers.getSigners();
-  });
-
   describe("BigNumber", () => {
     it("tests equality", async () => {
+      const { user } = await ethers.getNamedSigners();
       const balance = await getBalance(user.address);
-      expect(balance).to.equal("9998999940912990518509");
+      expect(balance).to.equal(toWei(10000));
     });
   });
 });

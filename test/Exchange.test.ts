@@ -1,29 +1,27 @@
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import "@nomiclabs/hardhat-waffle";
+// import "@nomiclabs/hardhat-waffle";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { Token, Exchange } from "../typechain";
 import { toWei, fromWei, toUnit, fromUnit } from "../utils";
 
 const getBalance = ethers.provider.getBalance;
 
 describe("Exchange", () => {
-  let owner: SignerWithAddress;
-  let user: SignerWithAddress;
-
   let token: Token;
   let exchange: Exchange;
 
+  let owner: SignerWithAddress;
+  let user: SignerWithAddress;
+
   beforeEach(async () => {
-    [owner, user] = await ethers.getSigners();
+    await deployments.fixture(["Token", "Exchange", "Factory"]);
 
-    const tokenFactory = await ethers.getContractFactory("Token");
-    token = await tokenFactory.deploy("Token", "TKN", toUnit(1000000));
-    await token.deployed();
+    owner = await ethers.getNamedSigner("deployer");
+    user = await ethers.getNamedSigner("user");
 
-    const exchangeFactory = await ethers.getContractFactory("Exchange");
-    exchange = await exchangeFactory.deploy(token.address);
-    await exchange.deployed();
+    token = await ethers.getContract("AAAToken", owner);
+    exchange = await ethers.getContract("AAAExchange", owner);
   });
 
   it("is deployed", async () => {
@@ -113,7 +111,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("24.999938611164587638"); // 25 - fee
+      expect(ethDelta).to.equal("24.9999220902971465"); // 25 - fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       // (200 TKN, 100 ETH) => 25 LP = 50 TKN
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
@@ -133,7 +131,7 @@ describe("Exchange", () => {
       const tknAfter = await token.balanceOf(owner.address);
 
       const ethDelta = fromWei(ethAfter.sub(ethBefore));
-      expect(ethDelta).to.equal("99.999951182001693224"); // 100 - gas fee
+      expect(ethDelta).to.equal("99.999937671209783"); // 100 - gas fee
       const tknDelta = fromUnit(tknAfter.sub(tknBefore));
       expect(tknDelta).to.equal((lpAmount * 2).toFixed(1).toString());
     });
@@ -221,7 +219,7 @@ describe("Exchange", () => {
 
       // The ratio is 1000 TKN / 2000 ETH = 1/2
       // We expect to get 2 TKN, so we spent only ~1 ETH
-      expect(ethDelta).to.equal("-1.000059087009481491");
+      expect(ethDelta).to.equal("-1.000075922451218032");
 
       const tknBalanceUser = await token.balanceOf(user.address);
       expect(fromUnit(tknBalanceUser)).to.equal("1.978041738678708079");
