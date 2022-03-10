@@ -7,14 +7,25 @@ import {
 } from "../typechain";
 import { fromUnit, toUnit, toWei } from "../utils";
 
-const { ALCHEMY_RINKEBY_API_KEY, ACCOUNT1_PRIVATE_KEY } = process.env;
+const {
+  ALCHEMY_RINKEBY_API_KEY,
+  ALCHEMY_FORKING_API_KEY,
+  ACCOUNT1_PRIVATE_KEY,
+  ACCOUNT2_PRIVATE_KEY,
+} = process.env;
 const { AAA_TOKEN, AAA_EXCHANGE } = process.env;
 
-const provider = new ethers.providers.AlchemyProvider(
+const rinkebyProvider = new ethers.providers.AlchemyProvider(
   "rinkeby",
   ALCHEMY_RINKEBY_API_KEY
 );
-const wallet = new ethers.Wallet(ACCOUNT1_PRIVATE_KEY!, provider);
+const mainnetProvider = new ethers.providers.AlchemyProvider(
+  "mainnet",
+  ALCHEMY_FORKING_API_KEY
+);
+// const wallet = new ethers.Wallet(ACCOUNT1_PRIVATE_KEY!, rinkebyProvider);
+const wallet = new ethers.Wallet(ACCOUNT2_PRIVATE_KEY!, mainnetProvider);
+
 const aaaToken: Token = Token__factory.connect(AAA_TOKEN!, wallet);
 const aaaExchange: Exchange = Exchange__factory.connect(AAA_EXCHANGE!, wallet);
 
