@@ -41,6 +41,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       forking: {
+        enabled: true,
         url: ALCHEMY_FORKING_API_URL!,
       },
     },

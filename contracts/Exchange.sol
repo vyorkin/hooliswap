@@ -35,23 +35,33 @@ contract Exchange is ERC20 {
         // the share of added liquidity (in ETH)
 
         if (getTknReserve() == 0) {
-            // If this is a new exchange (no liquidity) allow
-            // an arbitrary liquidity proportion
+            // Transfer ERC20 tokens to the Exchange contract
             IERC20 token = IERC20(tokenAddress);
             token.transferFrom(msg.sender, address(this), tknAmount);
 
+            // If this is a new exchange (no liquidity) allow an arbitrary liquidity proportion
+            // First person who add liquidity sets the proportion between ETH and TKN
             uint256 liquidity = address(this).balance;
+            // Minted LP tokens are equal to the amount deposited ethers
             _mint(msg.sender, liquidity);
 
             return liquidity;
         } else {
-            // Otherwise enforce the established reserves proportion
+            // Otherwise enforce the established reserves proportion.
+            // We must ensure that additional liquidity is added in the
+            // same proportion that has already established in the pool
+
             uint256 ethReserve = address(this).balance - msg.value;
             uint256 tknReserve = getTknReserve();
+
+            // We’re not depositing all tokens provided by user but
+            // only an amount calculated based on current reserves ratio.
+            // Here is how we get the actual amount of tokens to deposit:
+            uint256 tknAmountActual = (msg.value * tknReserve) / ethReserve;
+
             // 10 TKN_r, 2 ETH_r
             // (5 TKN, 1 ETH): 1 ETH * 10 TKN_r / 2 ETH_r = 5 TKN (OK)
             // (2 TKN, 4 ETH): 4 ETH * 10 TKN_r / 2 ETH_r = 20 TKN (FAIL)
-            uint256 tknAmountActual = (msg.value * tknReserve) / ethReserve;
 
             require(tknAmount >= tknAmountActual, "insufficient token amount");
 

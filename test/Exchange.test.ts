@@ -1,5 +1,5 @@
 // import "@nomiclabs/hardhat-waffle";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { Token, Exchange } from "../typechain";
